@@ -9,7 +9,7 @@ const router = express.Router();
 router.post("/", createWallet);
 router.post("/deposit", depositMoney)
 router.post("/transfer",transferMoney)
-router.post('/balance',getBalance)
+router.get('/balance',getBalance)
 router.get("/transactions",getTransactions)
 router.get("/summary", getSummary)
 module.exports = router;

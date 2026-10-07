@@ -1,4 +1,3 @@
-
 const pool = require("../config/db");
 const walletTransactionModel = require("../models/walletTransactionModel");
 const walletModel = require("../models/walletModel");

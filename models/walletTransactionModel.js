@@ -1,4 +1,5 @@
 const { Connection } = require("mysql2");
+const pool = require("../config/db");
 
 const createTransaction = async (Connection,{walletId, referenceId, type,amount, balanceBefore, balanceAfter, description})=>{
 
