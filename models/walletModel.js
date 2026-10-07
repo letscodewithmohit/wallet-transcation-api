@@ -41,11 +41,19 @@ const updateBalance = async (walletId,balance, connection) => {
    
 };
 
+const getWalletBalance = async (walletId) => {
+    const [rows] = await pool.query(
+        `SELECT id, userId, balance, currency, status  FROM wallets where id = ?`, [walletId]  
+    );
+    return rows[0];
+};
+
 module.exports = {
     createWallet,
     getWalletById,  
     getWalletByUserId,
     getWalletForUpdate,
-    updateBalance};
+    updateBalance,
+    getWalletBalance};
 
 

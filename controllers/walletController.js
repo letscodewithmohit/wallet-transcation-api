@@ -392,8 +392,195 @@ const transferMoney = async (req, res) => {
         connection.release();
     }
 };
+
+const getBalance = async (req, res) => {
+    try {
+        const { walletId } = req.query;
+
+        if (!walletId) {
+            return res.status(400).json({
+                message: "walletId is required",
+            });
+        }
+
+        const wallet = await walletModel.getWalletBalance(walletId);
+
+        if (!wallet) {
+            return res.status(404).json({
+                message: "Wallet not found",
+            });
+        }
+
+        return res.status(200).json({
+            walletId: wallet.id,
+            userId: wallet.userId,
+            balance: wallet.balance,
+            currency: wallet.currency,
+            status: wallet.status,
+        });
+
+    } catch (error) {
+        console.error("Balance error:", error);
+
+        return res.status(500).json({
+            message: "Failed to fetch wallet balance",
+        });
+    }
+};
+
+const getTransactions = async (req, res) => {
+    try {
+        const {
+            walletId,
+            page = 1,
+            limit = 10,
+            type,
+            fromDate,
+            toDate,
+        } = req.query;
+
+        if (!walletId) {
+            return res.status(400).json({
+                message: "walletId is required",
+            });
+        }
+
+        const wallet = await walletModel.getWalletById(walletId);
+
+        if (!wallet) {
+            return res.status(404).json({
+                message: "Wallet not found",
+            });
+        }
+
+        const pageNumber = Number(page);
+        const limitNumber = Number(limit);
+
+        if (!Number.isInteger(pageNumber) || pageNumber < 1) {
+            return res.status(400).json({
+                message: "page must be a positive number",
+            });
+        }
+
+        if (
+            !Number.isInteger(limitNumber) ||
+            limitNumber < 1 ||
+            limitNumber > 100
+        ) {
+            return res.status(400).json({
+                message: "limit must be between 1 and 100",
+            });
+        }
+
+        const validTypes = ["CREDIT", "DEBIT", "TRANSFER"];
+
+        if (type && !validTypes.includes(type.toUpperCase())) {
+            return res.status(400).json({
+                message: "Invalid transaction type",
+            });
+        }
+
+        const result = await walletTransactionModel.getTransactions(
+            walletId,
+            pageNumber,
+            limitNumber,
+            type ? type.toUpperCase() : null,
+            fromDate,
+            toDate
+        );
+
+        return res.status(200).json({
+            walletId: Number(walletId),
+            page: pageNumber,
+            limit: limitNumber,
+            total: Number(result.total),
+            totalPages: Math.ceil(result.total / limitNumber),
+            transactions: result.transactions,
+        });
+
+    } catch (error) {
+        console.error("Transactions error:", error);
+
+        return res.status(500).json({
+            message: "Failed to fetch transactions",
+        });
+    }
+};
+
+const getSummary = async (req, res) => {
+    try {
+        const { walletId } = req.query;
+
+        if (!walletId) {
+            return res.status(400).json({
+                message: "walletId is required",
+            });
+        }
+
+        const wallet = await walletModel.getWalletById(walletId);
+
+        if (!wallet) {
+            return res.status(404).json({
+                message: "Wallet not found",
+            });
+        }
+
+        const [rows] = await pool.query(
+            `SELECT
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN type = 'CREDIT' THEN amount
+                            ELSE 0
+                        END
+                    ), 0
+                ) AS totalCredited,
+
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN type = 'DEBIT' THEN amount
+                            ELSE 0
+                        END
+                    ), 0
+                ) AS totalDebited,
+
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN type = 'TRANSFER' THEN amount
+                            ELSE 0
+                        END
+                    ), 0
+                ) AS totalTransferred
+
+             FROM wallet_transactions
+             WHERE walletId = ?`,
+            [walletId]
+        );
+
+        return res.status(200).json({
+            walletId: wallet.id,
+            currency: wallet.currency,
+            currentBalance: wallet.balance,
+            totalCredited: rows[0].totalCredited,
+            totalDebited: rows[0].totalDebited,
+            totalTransferred: rows[0].totalTransferred,
+        });
+
+    } catch (error) {
+        console.error("Summary error:", error);
+
+        return res.status(500).json({
+            message: "Failed to fetch wallet summary",
+        });
+    }
+};
 module.exports = {
     createWallet,
     depositMoney,
-    transferMoney
+    transferMoney,
+    getBalance,
+    getTransactions,
+    getSummary
 }
