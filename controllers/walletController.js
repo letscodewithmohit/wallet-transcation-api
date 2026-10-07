@@ -1,6 +1,6 @@
 
 const pool = require("../config/db");
-const walletTransactionModel = require("../models/transferModel");
+const walletTransactionModel = require("../models/walletTransactionModel");
 const walletModel = require("../models/walletModel");
 const transferModel = require("../models/transferModel")
 
@@ -85,7 +85,9 @@ const depositMoney = async (req, res) => {
             });
         }
 
-        if (wallet.status !== "ACTIVE") {
+
+          console.log("Wallet status:", wallet.status);
+        if (wallet.status.toUpperCase() !== "ACTIVE") {
             await connection.rollback();
 
             return res.status(400).json({
@@ -197,8 +199,7 @@ const transferMoney = async (req, res) => {
             });
         }
 
-        // 3. Lock wallets
-        // Lock in consistent ID order to reduce deadlock risk
+       
         let senderWallet;
         let receiverWallet;
 
@@ -234,7 +235,7 @@ const transferMoney = async (req, res) => {
             senderWallet = secondWallet;
         }
 
-        // 4. Check wallet existence
+      
         if (!senderWallet) {
             await connection.rollback();
 
@@ -251,8 +252,8 @@ const transferMoney = async (req, res) => {
             });
         }
 
-        // 5. Check wallet status
-        if (senderWallet.status !== "ACTIVE") {
+        
+        if (senderWallet.status.toUpperCase() !== "ACTIVE") {
             await connection.rollback();
 
             return res.status(400).json({
@@ -260,7 +261,7 @@ const transferMoney = async (req, res) => {
             });
         }
 
-        if (receiverWallet.status !== "ACTIVE") {
+        if (receiverWallet.status.toUpperCase() !== "ACTIVE") {
             await connection.rollback();
 
             return res.status(400).json({
@@ -292,7 +293,7 @@ const transferMoney = async (req, res) => {
             });
         }
 
-        // 8. Calculate new balances
+        
         const senderBalanceAfter =
             senderBalanceBefore - transferAmount;
 
@@ -313,7 +314,7 @@ const transferMoney = async (req, res) => {
             connection
         );
 
-        // 11. Create sender DEBIT transaction
+     
         await walletTransactionModel.createTransaction(
             connection,
             {

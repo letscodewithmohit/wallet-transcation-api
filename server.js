@@ -11,6 +11,7 @@ app.use(express.json());
 
 app.use("/wallet", walletRoutes);
 
+
 app.get("/", (req, res) => {
     res.json({
         message: "API is running",

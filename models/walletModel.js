@@ -26,7 +26,7 @@ const getWalletByUserId = async (userId) => {
 
 const getWalletForUpdate = async (walletId,connection) => {
     const [rows] = await connection.query(
-        `SELECT * FROM wallets where id = ? FOR UPDTAE`, [walletId]
+        `SELECT * FROM wallets where id = ? FOR UPDATE`, [walletId]
     );
     return rows[0];
 };

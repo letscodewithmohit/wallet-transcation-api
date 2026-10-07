@@ -1,21 +1,21 @@
 const { Connection } = require("mysql2");
 
-const createTransfer = async (Connection,{refernecId,senderWalletId, receiverwalletId,amount})=>{
+const createTransfer = async (Connection,{referenceId,senderWalletId, receiverWalletId,amount})=>{
 
     const [result] = await Connection.query(
-        `INSERT INTO transfers(refernecId,senderWalletId, receiverwalletId,amount,status) VALUES (?,?,?,?,'COMPLETED')`,[refernecId,senderWalletId, receiverwalletId,amount]
+        `INSERT INTO transfers(referenceId,senderWalletId, receiverWalletId,amount,status) VALUES (?,?,?,?,'COMPLETED')`,[referenceId,senderWalletId, receiverWalletId,amount]
     );
     return result;
 };
 
 
-const getTransferByReferenceId = async (refernecId,Connection)=>{
+const getTransferByReferenceId = async (referenceId,Connection)=>{
 
     const [rows] = await Connection.query(
-        `SELECT * FROM transfers where referenceId = ?`,[refernecId]
+        `SELECT * FROM transfers where referenceId = ?`,[referenceId]
     );
     return rows[0];
-};
+};  
 
 
 module.exports = {
